@@ -19,6 +19,10 @@ package org.apache.calcite.adapter.enumerable;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
+import org.apache.calcite.rel.core.Correlate;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.hint.HintStrategyTable;
+import org.apache.calcite.rel.hint.Hintable;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
 import org.apache.calcite.tools.RelBuilderFactory;
 
@@ -27,21 +31,25 @@ import java.util.function.Predicate;
 /**
  * Implementation of nested loops over enumerable inputs.
  */
-public class EnumerableCorrelateRule extends ConverterRule {
+public class EnumerableParallelCorrelateRule extends ConverterRule {
+  static {
+    HintStrategyTable.addHintToDefaultTable("CORRELATE_PARALLEL", (a, b) -> true);
+  }
+
   /**
    * Creates an EnumerableCorrelateRule.
    *
    * @param relBuilderFactory Builder for relational expressions
    */
-  public EnumerableCorrelateRule(RelBuilderFactory relBuilderFactory) {
-    super(LogicalCorrelate.class, (Predicate<RelNode>) r -> !EnumerableParallelCorrelateRule.doParallelize(r),
+  public EnumerableParallelCorrelateRule(RelBuilderFactory relBuilderFactory) {
+    super(LogicalCorrelate.class, (Predicate<RelNode>) r -> doParallelize(r),
         Convention.NONE, EnumerableConvention.INSTANCE, relBuilderFactory,
-        "EnumerableCorrelateRule");
+        "EnumerableParallelCorrelateRule");
   }
 
   public RelNode convert(RelNode rel) {
     final LogicalCorrelate c = (LogicalCorrelate) rel;
-    return EnumerableCorrelate.create(
+    return EnumerableParallelCorrelate.create(
         convert(c.getLeft(), c.getLeft().getTraitSet()
             .replace(EnumerableConvention.INSTANCE)),
         convert(c.getRight(), c.getRight().getTraitSet()
@@ -50,5 +58,14 @@ public class EnumerableCorrelateRule extends ConverterRule {
         c.getCorrelationId(),
         c.getRequiredColumns(),
         c.getJoinType());
+  }
+
+  public static boolean doParallelize(RelNode r){
+      if (r instanceof Correlate) {
+          Correlate rC = (Correlate) r;
+          return rC.getJoinType() == JoinRelType.INNER
+                  && rC.getHints().stream().anyMatch(x -> "CORRELATE_PARALLEL".equals(x.hintName));
+      }
+      return false;
   }
 }

@@ -62,6 +62,12 @@ import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.calcite.linq4j.Linq4j.CollectionEnumerable;
 import static org.apache.calcite.linq4j.Linq4j.ListEnumerable;
@@ -1438,6 +1444,107 @@ public abstract class EnumerableDefaults {
               innerEnumerator.close();
               innerEnumerator = null;
             }
+          }
+        };
+      }
+    };
+  }
+
+
+  /**
+   * For each row of the {@code outer} enumerable returns the correlated rows
+   * from the {@code inner} enumerable.
+   */
+  public static <TSource, TInner, TResult> Enumerable<TResult> correlateParallelJoin(
+      final JoinType joinType, final Enumerable<TSource> outer,
+      final Function1<TSource, Enumerable<TInner>> inner,
+      final Function2<TSource, TInner, TResult> resultSelector, final Integer parallel) {
+    if (joinType != JoinType.INNER) {
+      throw new IllegalArgumentException("JoinType " + joinType + " is not valid for correlateParallelJoin");
+    }
+
+    return new AbstractEnumerable<TResult>() {
+      public Enumerator<TResult> enumerator() {
+        return new Enumerator<TResult>() {
+          final Enumerator<TSource> outerEnumerator = outer.enumerator();
+          TResult currentValue;
+          BlockingQueue<Map.Entry<TSource,TInner>> q = new LinkedBlockingQueue<>(parallel);
+          final AtomicInteger workCtr = new AtomicInteger(0);
+          ExecutorService executorService = Executors.newFixedThreadPool(parallel);
+
+          public TResult current() {
+            return currentValue;
+          }
+
+          public boolean moveNext() {
+            System.out.println("EnumerableDefaults#correlateParallelJoin#moveNext");
+
+            //start threads up to parallel
+            while (workCtr.get() < parallel){
+              if(!outerEnumerator.moveNext()){
+                break;
+              }
+              final TSource oC = outerEnumerator.current();
+              workCtr.incrementAndGet();
+              executorService.submit(()->{
+                Enumerator<TInner> innerEnumerator = null;
+                try{
+                  //do work and write to q
+                  Enumerable<TInner> innerEnumerable = inner.apply(oC);
+                  if (innerEnumerable == null) {
+                    return;
+                  }
+                  innerEnumerator = innerEnumerable.enumerator();
+                  while (innerEnumerator.moveNext()){
+                    q.put(new AbstractMap.SimpleEntry<>(oC, innerEnumerator.current()));
+                  }
+                }
+                catch (Exception ignored){
+                }
+                finally {
+                  if (innerEnumerator != null) {
+                    innerEnumerator.close();
+                  }
+                  workCtr.decrementAndGet();
+                }
+              });
+
+            }
+
+            if (workCtr.get() == 0 && q.isEmpty()){
+              return false;
+            }
+
+            //TODO race condition:
+            // queue empty, threads stop without adding to queue here
+            // => waiting for 10 seconds
+
+            //TODO race condition: stopping waiting after 10 s even though someone is working
+            try {
+              Map.Entry<TSource, TInner> e = q.poll(10, TimeUnit.SECONDS);
+              if (e == null){
+                return false;
+              }
+              currentValue = resultSelector.apply(e.getKey(), e.getValue());
+            }catch (Exception ignored){
+              return false;
+            }
+
+
+            return true;
+          }
+
+          public void reset() {
+            outerEnumerator.reset();
+            executorService.shutdownNow();
+            workCtr.set(0);
+            executorService = Executors.newFixedThreadPool(parallel);
+            q = new LinkedBlockingQueue<>();
+          }
+
+          public void close() {
+            outerEnumerator.close();
+            executorService.shutdownNow();
           }
         };
       }
