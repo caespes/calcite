@@ -22,7 +22,6 @@ import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.hint.HintStrategyTable;
-import org.apache.calcite.rel.hint.Hintable;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
 import org.apache.calcite.tools.RelBuilderFactory;
 
@@ -60,12 +59,12 @@ public class EnumerableParallelCorrelateRule extends ConverterRule {
         c.getJoinType());
   }
 
-  public static boolean doParallelize(RelNode r){
-      if (r instanceof Correlate) {
-          Correlate rC = (Correlate) r;
-          return rC.getJoinType() == JoinRelType.INNER
-                  && rC.getHints().stream().anyMatch(x -> "CORRELATE_PARALLEL".equals(x.hintName));
-      }
-      return false;
+  public static boolean doParallelize(RelNode r) {
+    if (r instanceof Correlate) {
+      Correlate rC = (Correlate) r;
+      return rC.getJoinType() == JoinRelType.INNER
+          && rC.getHints().stream().anyMatch(x -> "CORRELATE_PARALLEL".equals(x.hintName));
+    }
+    return false;
   }
 }

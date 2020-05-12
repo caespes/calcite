@@ -50,6 +50,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.mdkt.compiler.InMemoryJavaCompiler;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -62,7 +64,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.sql.DataSource;
-import org.mdkt.compiler.InMemoryJavaCompiler;
 
 /**
  * Reads a model and creates schema objects accordingly.
@@ -74,7 +75,7 @@ public class ModelHandler {
       .configure(JsonParser.Feature.ALLOW_COMMENTS, true);
   private static final ObjectMapper YAML_MAPPER = new YAMLMapper();
 
-  private static ClassLoader CLASSLOADER = ModelHandler.class.getClassLoader();
+  private static ClassLoader classLoader = ModelHandler.class.getClassLoader();
 
   private final CalciteConnection connection;
   private final Deque<Pair<String, SchemaPlus>> schemaStack = new ArrayDeque<>();
@@ -152,16 +153,16 @@ public class ModelHandler {
     if (classSource != null) {
       try {
         InMemoryJavaCompiler c = InMemoryJavaCompiler.newInstance();
-        c.useParentClassLoader(CLASSLOADER);
+        c.useParentClassLoader(classLoader);
         c.compile(className, classSource);
-        CLASSLOADER = c.getClassloader();
+        classLoader = c.getClassloader();
       } catch (Exception e) {
         throw new RuntimeException("Compilation of '" + className + "' failed!", e);
       }
     }
 
     try {
-      clazz = CLASSLOADER.loadClass(className);
+      clazz = classLoader.loadClass(className);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("UDF class '"
           + className + "' not found");
@@ -591,7 +592,7 @@ public class ModelHandler {
   }
 
   public static ClassLoader getClassLoader() {
-    return CLASSLOADER;
+    return classLoader;
   }
 
   /** Extra operands automatically injected into a

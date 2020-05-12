@@ -49,7 +49,8 @@ import java.util.Set;
  */
 public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRel {
 
-  private static final String ELASTICSEARCH_ENABLE_SAFE_GROUPING = "ELASTICSEARCH_ENABLE_SAFE_GROUPING";
+  private static final String ELASTICSEARCH_ENABLE_SAFE_GROUPING
+      = "ELASTICSEARCH_ENABLE_SAFE_GROUPING";
 
   private static final Set<SqlKind> SUPPORTED_AGGREGATIONS =
       EnumSet.of(SqlKind.COUNT, SqlKind.MAX, SqlKind.MIN, SqlKind.AVG,
@@ -62,7 +63,7 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
       RelNode input,
       ImmutableBitSet groupSet,
       List<ImmutableBitSet> groupSets,
-      List<AggregateCall> aggCalls) throws InvalidRelException  {
+      List<AggregateCall> aggCalls) throws InvalidRelException {
     super(cluster, traitSet, hints, input, groupSet, groupSets, aggCalls);
 
     if (getConvention() != input.getConvention()) {
@@ -78,7 +79,7 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
     for (AggregateCall aggCall : aggCalls) {
       if (aggCall.isDistinct() && !aggCall.isApproximate()) {
         final String message = String.format(Locale.ROOT, "Only approximate distinct "
-            + "aggregations are supported in Elastic (cardinality aggregation). Use %s function",
+                + "aggregations are supported in Elastic (cardinality aggregation). Use %s function",
             SqlStdOperatorTable.APPROX_COUNT_DISTINCT.getName());
         throw new InvalidRelException(message);
       }
@@ -91,14 +92,16 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
       }
     }
 
-    if (this.getHints().stream().anyMatch(x -> ELASTICSEARCH_ENABLE_SAFE_GROUPING.equals(x.hintName))) {
+    if (this.getHints().stream().
+        anyMatch(x -> ELASTICSEARCH_ENABLE_SAFE_GROUPING.equals(x.hintName))) {
       if (groupSet.size() != 0) {
-        final String message = "no grouping supported with hint " + ELASTICSEARCH_ENABLE_SAFE_GROUPING;
+        final String message = "no grouping supported with hint "
+            + ELASTICSEARCH_ENABLE_SAFE_GROUPING;
         throw new InvalidRelException(message);
       }
     } else if (getGroupType() != Group.SIMPLE) {
       final String message = String.format(Locale.ROOT, "Only %s grouping is supported. "
-              + "Yours is %s", Group.SIMPLE, getGroupType());
+          + "Yours is %s", Group.SIMPLE, getGroupType());
       throw new InvalidRelException(message);
     }
   }

@@ -296,8 +296,8 @@ public abstract class MutableRels {
     case CORRELATE:
       final MutableCorrelate correlate = (MutableCorrelate) node;
       return LogicalCorrelate.create(fromMutable(correlate.getLeft(), relBuilder),
-          fromMutable(correlate.getRight(), relBuilder), ImmutableList.of(), correlate.correlationId,
-          correlate.requiredColumns, correlate.joinType);
+          fromMutable(correlate.getRight(), relBuilder), ImmutableList.of(),
+          correlate.correlationId, correlate.requiredColumns, correlate.joinType);
     case UNION:
       final MutableUnion union = (MutableUnion) node;
       relBuilder.pushAll(MutableRels.fromMutables(union.inputs, relBuilder));

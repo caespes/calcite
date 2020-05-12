@@ -2125,7 +2125,7 @@ public class RelBuilder {
       }
       join =
           struct.correlateFactory.createCorrelate(left.rel, right.rel,
-              ImmutableList.of(),id, requiredColumns, joinType);
+              ImmutableList.of(), id, requiredColumns, joinType);
     } else {
       join =
           struct.joinFactory.createJoin(left.rel, right.rel,

@@ -34,7 +34,8 @@ public class EnumerableCorrelateRule extends ConverterRule {
    * @param relBuilderFactory Builder for relational expressions
    */
   public EnumerableCorrelateRule(RelBuilderFactory relBuilderFactory) {
-    super(LogicalCorrelate.class, (Predicate<RelNode>) r -> !EnumerableParallelCorrelateRule.doParallelize(r),
+    super(LogicalCorrelate.class,
+        (Predicate<RelNode>) r -> !EnumerableParallelCorrelateRule.doParallelize(r),
         Convention.NONE, EnumerableConvention.INSTANCE, relBuilderFactory,
         "EnumerableCorrelateRule");
   }

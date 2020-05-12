@@ -1460,7 +1460,8 @@ public abstract class EnumerableDefaults {
       final Function1<TSource, Enumerable<TInner>> inner,
       final Function2<TSource, TInner, TResult> resultSelector, final Integer parallel) {
     if (joinType != JoinType.INNER) {
-      throw new IllegalArgumentException("JoinType " + joinType + " is not valid for correlateParallelJoin");
+      throw new IllegalArgumentException("JoinType " + joinType
+          + " is not valid for correlateParallelJoin");
     }
 
     return new AbstractEnumerable<TResult>() {
@@ -1468,7 +1469,7 @@ public abstract class EnumerableDefaults {
         return new Enumerator<TResult>() {
           final Enumerator<TSource> outerEnumerator = outer.enumerator();
           TResult currentValue;
-          BlockingQueue<Map.Entry<TSource,TInner>> q = new LinkedBlockingQueue<>(parallel);
+          BlockingQueue<Map.Entry<TSource, TInner>> q = new LinkedBlockingQueue<>(parallel);
           final AtomicInteger workCtr = new AtomicInteger(0);
           ExecutorService executorService = Executors.newFixedThreadPool(parallel);
 
@@ -1480,28 +1481,26 @@ public abstract class EnumerableDefaults {
             System.out.println("EnumerableDefaults#correlateParallelJoin#moveNext");
 
             //start threads up to parallel
-            while (workCtr.get() < parallel){
-              if(!outerEnumerator.moveNext()){
+            while (workCtr.get() < parallel) {
+              if (!outerEnumerator.moveNext()) {
                 break;
               }
               final TSource oC = outerEnumerator.current();
               workCtr.incrementAndGet();
-              executorService.submit(()->{
+              executorService.submit(() -> {
                 Enumerator<TInner> innerEnumerator = null;
-                try{
+                try {
                   //do work and write to q
                   Enumerable<TInner> innerEnumerable = inner.apply(oC);
                   if (innerEnumerable == null) {
                     return;
                   }
                   innerEnumerator = innerEnumerable.enumerator();
-                  while (innerEnumerator.moveNext()){
+                  while (innerEnumerator.moveNext()) {
                     q.put(new AbstractMap.SimpleEntry<>(oC, innerEnumerator.current()));
                   }
-                }
-                catch (Exception ignored){
-                }
-                finally {
+                } catch (Exception ignored) {
+                } finally {
                   if (innerEnumerator != null) {
                     innerEnumerator.close();
                   }
@@ -1511,7 +1510,7 @@ public abstract class EnumerableDefaults {
 
             }
 
-            if (workCtr.get() == 0 && q.isEmpty()){
+            if (workCtr.get() == 0 && q.isEmpty()) {
               return false;
             }
 
@@ -1522,11 +1521,11 @@ public abstract class EnumerableDefaults {
             //TODO race condition: stopping waiting after 10 s even though someone is working
             try {
               Map.Entry<TSource, TInner> e = q.poll(10, TimeUnit.SECONDS);
-              if (e == null){
+              if (e == null) {
                 return false;
               }
               currentValue = resultSelector.apply(e.getKey(), e.getValue());
-            }catch (Exception ignored){
+            } catch (Exception ignored) {
               return false;
             }
 

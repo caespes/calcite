@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 plugins {
     `java-library`
     id("com.github.johnrengelman.shadow")
@@ -56,7 +55,6 @@ tasks {
         ).forEach {
             relocate(it, "${project.group}.$it")
         }
-
     }
 
     jar {

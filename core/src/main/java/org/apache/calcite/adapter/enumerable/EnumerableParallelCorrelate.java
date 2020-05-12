@@ -16,8 +16,11 @@
  */
 package org.apache.calcite.adapter.enumerable;
 
-import com.google.common.collect.ImmutableList;
-import org.apache.calcite.linq4j.tree.*;
+import org.apache.calcite.linq4j.tree.BlockBuilder;
+import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.linq4j.tree.Expressions;
+import org.apache.calcite.linq4j.tree.ParameterExpression;
+import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollationTraitDef;
@@ -25,12 +28,13 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.hint.HintStrategyTable;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.metadata.RelMdCollation;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.util.BuiltInMethod;
 import org.apache.calcite.util.ImmutableBitSet;
+
+import com.google.common.collect.ImmutableList;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -42,9 +46,9 @@ public class EnumerableParallelCorrelate extends Correlate
     implements EnumerableRel {
 
   public EnumerableParallelCorrelate(RelOptCluster cluster, RelTraitSet traits, List<RelHint> hints,
-                                     RelNode left, RelNode right,
-                                     CorrelationId correlationId,
-                                     ImmutableBitSet requiredColumns, JoinRelType joinType) {
+      RelNode left, RelNode right,
+      CorrelationId correlationId,
+      ImmutableBitSet requiredColumns, JoinRelType joinType) {
     super(cluster, traits, hints, left, right, correlationId, requiredColumns,
         joinType);
   }
@@ -75,8 +79,8 @@ public class EnumerableParallelCorrelate extends Correlate
   }
 
   @Override public EnumerableParallelCorrelate copy(RelTraitSet traitSet,
-                                                    RelNode left, RelNode right, CorrelationId correlationId,
-                                                    ImmutableBitSet requiredColumns, JoinRelType joinType) {
+      RelNode left, RelNode right, CorrelationId correlationId,
+      ImmutableBitSet requiredColumns, JoinRelType joinType) {
     return new EnumerableParallelCorrelate(getCluster(),
         traitSet, hints, left, right, correlationId, requiredColumns, joinType);
   }
@@ -129,18 +133,18 @@ public class EnumerableParallelCorrelate extends Correlate
             ImmutableList.of(leftResult.physType, rightResult.physType));
 
     int parallel = 10;
-    RelHint CORRELATE_PARALLEL = this.getHints().stream()
-            .filter(e -> e.hintName.equals("CORRELATE_PARALLEL"))
-            .findFirst().orElse(null);
+    RelHint hint = this.getHints().stream()
+        .filter(e -> e.hintName.equals("CORRELATE_PARALLEL"))
+        .findFirst().orElse(null);
 
-    if(CORRELATE_PARALLEL != null && CORRELATE_PARALLEL.kvOptions.containsKey("P")){
-        try {
-            int p =  Integer.parseInt(CORRELATE_PARALLEL.kvOptions.get("P"));
-            if (p>0){
-                parallel  = p;
-            }
-        }catch (Exception ignored){
+    if (hint != null && hint.kvOptions.containsKey("P")) {
+      try {
+        int p = Integer.parseInt(hint.kvOptions.get("P"));
+        if (p > 0) {
+          parallel = p;
         }
+      } catch (Exception ignored) {
+      }
     }
 
     builder.append(
