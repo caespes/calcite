@@ -217,7 +217,7 @@ public class RelOptCluster {
    */
   public HintStrategyTable getHintStrategies() {
     if (this.hintStrategies == null) {
-      this.hintStrategies = HintStrategyTable.EMPTY;
+      this.hintStrategies = HintStrategyTable.DEFAULT;
     }
     return this.hintStrategies;
   }

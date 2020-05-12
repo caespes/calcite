@@ -5861,7 +5861,7 @@ public class SqlToRelConverter {
 
     /** Returns the hint strategies used to decide how the hints are propagated to
      * the relational expressions. Default is
-     * {@link HintStrategyTable#EMPTY}. */
+     * {@link HintStrategyTable#DEFAULT}. */
     HintStrategyTable getHintStrategyTable();
   }
 
@@ -5874,7 +5874,7 @@ public class SqlToRelConverter {
     private boolean expand = true;
     private int inSubQueryThreshold = DEFAULT_IN_SUB_QUERY_THRESHOLD;
     private RelBuilderFactory relBuilderFactory = RelFactories.LOGICAL_BUILDER;
-    private HintStrategyTable hintStrategyTable = HintStrategyTable.EMPTY;
+    private HintStrategyTable hintStrategyTable = HintStrategyTable.DEFAULT;
 
     private ConfigBuilder() {}
 
