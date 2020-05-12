@@ -202,6 +202,8 @@ public enum BuiltInMethod {
       Enumerable.class, Predicate2.class, Function2.class, JoinType.class),
   CORRELATE_JOIN(ExtendedEnumerable.class, "correlateJoin",
       JoinType.class, Function1.class, Function2.class),
+  CORRELATE_PARALLEL_JOIN(ExtendedEnumerable.class, "correlateParallelJoin",
+      JoinType.class, Function1.class, Function2.class, Integer.class),
   CORRELATE_BATCH_JOIN(EnumerableDefaults.class, "correlateBatchJoin",
       JoinType.class, Enumerable.class, Function1.class, Function2.class,
       Predicate2.class, int.class),

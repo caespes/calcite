@@ -47,6 +47,9 @@ public class EnumerableRules {
   public static final RelOptRule ENUMERABLE_CORRELATE_RULE =
       new EnumerableCorrelateRule(RelFactories.LOGICAL_BUILDER);
 
+  public static final RelOptRule ENUMERABLE_PARALLEL_CORRELATE_RULE =
+      new EnumerableParallelCorrelateRule(RelFactories.LOGICAL_BUILDER);
+
   public static final RelOptRule ENUMERABLE_BATCH_NESTED_LOOP_JOIN_RULE =
       new EnumerableBatchNestedLoopJoinRule(RelFactories.LOGICAL_BUILDER);
 
@@ -120,6 +123,7 @@ public class EnumerableRules {
       EnumerableRules.ENUMERABLE_JOIN_RULE,
       EnumerableRules.ENUMERABLE_MERGE_JOIN_RULE,
       EnumerableRules.ENUMERABLE_CORRELATE_RULE,
+      EnumerableRules.ENUMERABLE_PARALLEL_CORRELATE_RULE,
       EnumerableRules.ENUMERABLE_PROJECT_RULE,
       EnumerableRules.ENUMERABLE_FILTER_RULE,
       EnumerableRules.ENUMERABLE_CALC_RULE,

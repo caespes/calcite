@@ -409,6 +409,13 @@ public abstract class DefaultEnumerable<T> implements OrderedEnumerable<T> {
         resultSelector);
   }
 
+  public <TInner, TResult> Enumerable<TResult> correlateParallelJoin(
+      JoinType joinType, Function1<T, Enumerable<TInner>> inner,
+      Function2<T, TInner, TResult> resultSelector, Integer parallel) {
+    return EnumerableDefaults.correlateParallelJoin(joinType, getThis(), inner,
+        resultSelector, parallel);
+  }
+
   public T last() {
     return EnumerableDefaults.last(getThis());
   }
