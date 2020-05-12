@@ -33,6 +33,7 @@ import org.apache.calcite.linq4j.tree.ClassDeclaration;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.linq4j.tree.FieldDeclaration;
 import org.apache.calcite.linq4j.tree.VisitorImpl;
+import org.apache.calcite.model.ModelHandler;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -146,7 +147,7 @@ public class EnumerableInterpretable extends ConverterImpl
         fieldCount == 1
             ? new Class[] {Bindable.class, Typed.class}
             : new Class[] {ArrayBindable.class});
-    cbe.setParentClassLoader(EnumerableInterpretable.class.getClassLoader());
+    cbe.setParentClassLoader(ModelHandler.getClassLoader());
     if (CalciteSystemProperty.DEBUG.value()) {
       // Add line numbers to the generated janino class
       cbe.setDebuggingInformation(true, true, true);

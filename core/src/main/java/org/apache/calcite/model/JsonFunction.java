@@ -36,6 +36,13 @@ public class JsonFunction {
    */
   public String className;
 
+  /**
+   * Source code of the class that implements this functions.
+   *
+   * <p>Optional. Use if class not in class path.
+   */
+  public String classSource;
+
   /** Name of the method that implements this function.
    *
    * <p>Optional.

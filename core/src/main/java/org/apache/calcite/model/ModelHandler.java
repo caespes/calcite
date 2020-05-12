@@ -60,7 +60,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import javax.sql.DataSource;
+import org.mdkt.compiler.InMemoryJavaCompiler;
 
 /**
  * Reads a model and creates schema objects accordingly.
@@ -71,6 +73,8 @@ public class ModelHandler {
       .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
       .configure(JsonParser.Feature.ALLOW_COMMENTS, true);
   private static final ObjectMapper YAML_MAPPER = new YAMLMapper();
+
+  private static ClassLoader CLASSLOADER = ModelHandler.class.getClassLoader();
 
   private final CalciteConnection connection;
   private final Deque<Pair<String, SchemaPlus>> schemaStack = new ArrayDeque<>();
@@ -123,9 +127,41 @@ public class ModelHandler {
    */
   public static void addFunctions(SchemaPlus schema, String functionName,
       List<String> path, String className, String methodName, boolean upCase) {
+    addFunctions(schema, functionName, path, className, null, methodName, upCase);
+  }
+
+  /** Creates and validates a {@link ScalarFunctionImpl}, and adds it to a
+   * schema. If {@code methodName} is "*", may add more than one function.
+   *
+   * @param schema Schema to add to
+   * @param functionName Name of function; null to derived from method name
+   * @param path Path to look for functions
+   * @param className Class to inspect for methods that may be user-defined
+   *                  functions
+   * @param classSource Class to inspect for methods that may be user-defined
+   *                    functions as source code
+   * @param methodName Method name;
+   *                  null means use the class as a UDF;
+   *                  "*" means add all methods
+   * @param upCase Whether to convert method names to upper case, so that they
+   *               can be called without using quotes
+   */
+  public static void addFunctions(SchemaPlus schema, String functionName,
+      List<String> path, String className, String classSource, String methodName, boolean upCase) {
     final Class<?> clazz;
+    if (classSource != null) {
+      try {
+        InMemoryJavaCompiler c = InMemoryJavaCompiler.newInstance();
+        c.useParentClassLoader(CLASSLOADER);
+        c.compile(className, classSource);
+        CLASSLOADER = c.getClassloader();
+      } catch (Exception e) {
+        throw new RuntimeException("Compilation of '" + className + "' failed!", e);
+      }
+    }
+
     try {
-      clazz = Class.forName(className);
+      clazz = CLASSLOADER.loadClass(className);
     } catch (ClassNotFoundException e) {
       throw new RuntimeException("UDF class '"
           + className + "' not found");
@@ -518,7 +554,7 @@ public class ModelHandler {
       final List<String> path =
           Util.first(jsonFunction.path, currentSchemaPath());
       addFunctions(schema, jsonFunction.name, path, jsonFunction.className,
-          jsonFunction.methodName, false);
+          jsonFunction.classSource, jsonFunction.methodName, false);
     } catch (Exception e) {
       throw new RuntimeException("Error instantiating " + jsonFunction, e);
     }
@@ -552,6 +588,10 @@ public class ModelHandler {
     }
     latticeBuilder.addTile(tileBuilder.build());
     tileBuilder = null;
+  }
+
+  public static ClassLoader getClassLoader() {
+    return CLASSLOADER;
   }
 
   /** Extra operands automatically injected into a
