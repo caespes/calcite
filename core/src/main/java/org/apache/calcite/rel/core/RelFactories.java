@@ -395,7 +395,7 @@ public class RelFactories {
      * @param requiredColumns  Required columns
      * @param joinType         Join type
      */
-    RelNode createCorrelate(RelNode left, RelNode right,
+    RelNode createCorrelate(RelNode left, RelNode right, List<RelHint> hints,
         CorrelationId correlationId, ImmutableBitSet requiredColumns,
         JoinRelType joinType);
   }
@@ -405,10 +405,10 @@ public class RelFactories {
    * {@link org.apache.calcite.rel.logical.LogicalCorrelate}.
    */
   private static class CorrelateFactoryImpl implements CorrelateFactory {
-    public RelNode createCorrelate(RelNode left, RelNode right,
+    public RelNode createCorrelate(RelNode left, RelNode right,  List<RelHint> hints,
         CorrelationId correlationId, ImmutableBitSet requiredColumns,
         JoinRelType joinType) {
-      return LogicalCorrelate.create(left, right, correlationId,
+      return LogicalCorrelate.create(left, right, hints, correlationId,
           requiredColumns, joinType);
     }
   }

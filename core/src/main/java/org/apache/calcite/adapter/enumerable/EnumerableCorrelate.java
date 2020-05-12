@@ -28,6 +28,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.metadata.RelMdCollation;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.util.BuiltInMethod;
@@ -37,17 +38,18 @@ import com.google.common.collect.ImmutableList;
 
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.List;
 
 /** Implementation of {@link org.apache.calcite.rel.core.Correlate} in
  * {@link org.apache.calcite.adapter.enumerable.EnumerableConvention enumerable calling convention}. */
 public class EnumerableCorrelate extends Correlate
     implements EnumerableRel {
 
-  public EnumerableCorrelate(RelOptCluster cluster, RelTraitSet traits,
+  public EnumerableCorrelate(RelOptCluster cluster, RelTraitSet traits, List<RelHint> hints,
       RelNode left, RelNode right,
       CorrelationId correlationId,
       ImmutableBitSet requiredColumns, JoinRelType joinType) {
-    super(cluster, traits, left, right, correlationId, requiredColumns,
+    super(cluster, traits, hints, left, right, correlationId, requiredColumns,
         joinType);
   }
 
@@ -55,6 +57,7 @@ public class EnumerableCorrelate extends Correlate
   public static EnumerableCorrelate create(
       RelNode left,
       RelNode right,
+      List<RelHint> hints,
       CorrelationId correlationId,
       ImmutableBitSet requiredColumns,
       JoinRelType joinType) {
@@ -67,6 +70,7 @@ public class EnumerableCorrelate extends Correlate
     return new EnumerableCorrelate(
         cluster,
         traitSet,
+        hints,
         left,
         right,
         correlationId,
@@ -78,7 +82,7 @@ public class EnumerableCorrelate extends Correlate
       RelNode left, RelNode right, CorrelationId correlationId,
       ImmutableBitSet requiredColumns, JoinRelType joinType) {
     return new EnumerableCorrelate(getCluster(),
-        traitSet, left, right, correlationId, requiredColumns, joinType);
+        traitSet, hints, left, right, correlationId, requiredColumns, joinType);
   }
 
   public Result implement(EnumerableRelImplementor implementor,

@@ -25,6 +25,8 @@ import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelInput;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.hint.Hintable;
+import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
@@ -65,12 +67,13 @@ import java.util.Set;
  *
  * @see CorrelationId
  */
-public abstract class Correlate extends BiRel {
+public abstract class Correlate extends BiRel implements Hintable {
   //~ Instance fields --------------------------------------------------------
 
   protected final CorrelationId correlationId;
   protected final ImmutableBitSet requiredColumns;
   protected final JoinRelType joinType;
+  protected final ImmutableList<RelHint> hints;
 
   //~ Constructors -----------------------------------------------------------
 
@@ -78,6 +81,7 @@ public abstract class Correlate extends BiRel {
    * Creates a Correlate.
    *
    * @param cluster      Cluster this relational expression belongs to
+   * @param hints        Hints
    * @param left         Left input relational expression
    * @param right        Right input relational expression
    * @param correlationId Variable name for the row of left input
@@ -87,6 +91,7 @@ public abstract class Correlate extends BiRel {
   protected Correlate(
       RelOptCluster cluster,
       RelTraitSet traitSet,
+      List<RelHint> hints,
       RelNode left,
       RelNode right,
       CorrelationId correlationId,
@@ -97,6 +102,7 @@ public abstract class Correlate extends BiRel {
     this.joinType = Objects.requireNonNull(joinType);
     this.correlationId = Objects.requireNonNull(correlationId);
     this.requiredColumns = Objects.requireNonNull(requiredColumns);
+    this.hints = ImmutableList.copyOf(hints);
   }
 
   /**
@@ -106,8 +112,9 @@ public abstract class Correlate extends BiRel {
    */
   public Correlate(RelInput input) {
     this(
-        input.getCluster(), input.getTraitSet(), input.getInputs().get(0),
-        input.getInputs().get(1),
+        input.getCluster(), input.getTraitSet(),
+        ImmutableList.of(),
+        input.getInputs().get(0), input.getInputs().get(1),
         new CorrelationId((Integer) input.get("correlation")),
         input.getBitSet("requiredColumns"),
         input.getEnum("joinType", JoinRelType.class));
@@ -219,5 +226,9 @@ public abstract class Correlate extends BiRel {
     return planner.getCostFactory().makeCost(
         rowCount /* generate results */ + leftRowCount /* scan left results */,
         0, 0).plus(rescanCost);
+  }
+
+  @Override public ImmutableList<RelHint> getHints() {
+    return hints;
   }
 }

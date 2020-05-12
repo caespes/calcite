@@ -60,6 +60,7 @@ import org.apache.calcite.util.mapping.Mapping;
 import org.apache.calcite.util.mapping.MappingType;
 import org.apache.calcite.util.mapping.Mappings;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.AbstractList;
@@ -295,7 +296,7 @@ public abstract class MutableRels {
     case CORRELATE:
       final MutableCorrelate correlate = (MutableCorrelate) node;
       return LogicalCorrelate.create(fromMutable(correlate.getLeft(), relBuilder),
-          fromMutable(correlate.getRight(), relBuilder), correlate.correlationId,
+          fromMutable(correlate.getRight(), relBuilder), ImmutableList.of(), correlate.correlationId,
           correlate.requiredColumns, correlate.joinType);
     case UNION:
       final MutableUnion union = (MutableUnion) node;

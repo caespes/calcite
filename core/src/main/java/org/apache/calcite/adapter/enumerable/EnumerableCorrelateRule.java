@@ -46,6 +46,7 @@ public class EnumerableCorrelateRule extends ConverterRule {
             .replace(EnumerableConvention.INSTANCE)),
         convert(c.getRight(), c.getRight().getTraitSet()
             .replace(EnumerableConvention.INSTANCE)),
+        c.getHints(),
         c.getCorrelationId(),
         c.getRequiredColumns(),
         c.getJoinType());
