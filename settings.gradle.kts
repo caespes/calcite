@@ -61,6 +61,7 @@ include(
     "plus",
     "redis",
     "server",
+    "shaded:core-with-all",
     "spark",
     "splunk",
     "ubenchmark"
