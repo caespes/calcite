@@ -141,6 +141,7 @@ public class JoinToCorrelateRule extends RelOptRule {
     RelNode newRel =
         LogicalCorrelate.create(left,
             relBuilder.build(),
+            join.getHints(),
             correlationId,
             requiredColumns.build(),
             join.getJoinType());

@@ -2605,7 +2605,7 @@ public class SqlToRelConverter {
             .union(p.requiredColumns);
       }
 
-      LogicalCorrelate corr = LogicalCorrelate.create(leftRel, innerRel,
+      LogicalCorrelate corr = LogicalCorrelate.create(leftRel, innerRel,  ImmutableList.of(),
           p.id, requiredCols, joinType);
       return corr;
     }
