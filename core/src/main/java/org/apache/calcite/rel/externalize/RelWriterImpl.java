@@ -98,7 +98,7 @@ public class RelWriterImpl implements RelWriter {
         } else {
           s.append(", ");
         }
-        s.append(", hints=").append(((Hintable) rel).getHints());
+        s.append("hints=").append(((Hintable) rel).getHints());
       }
       if (j > 0) {
         s.append(")");
