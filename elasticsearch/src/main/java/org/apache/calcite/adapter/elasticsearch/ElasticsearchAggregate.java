@@ -24,6 +24,7 @@ import org.apache.calcite.rel.InvalidRelException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -48,6 +49,8 @@ import java.util.Set;
  */
 public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRel {
 
+  private static final String ELASTICSEARCH_ENABLE_SAFE_GROUPING = "ELASTICSEARCH_ENABLE_SAFE_GROUPING";
+
   private static final Set<SqlKind> SUPPORTED_AGGREGATIONS =
       EnumSet.of(SqlKind.COUNT, SqlKind.MAX, SqlKind.MIN, SqlKind.AVG,
           SqlKind.SUM, SqlKind.ANY_VALUE);
@@ -55,11 +58,12 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
   /** Creates an ElasticsearchAggregate. */
   ElasticsearchAggregate(RelOptCluster cluster,
       RelTraitSet traitSet,
+      List<RelHint> hints,
       RelNode input,
       ImmutableBitSet groupSet,
       List<ImmutableBitSet> groupSets,
       List<AggregateCall> aggCalls) throws InvalidRelException  {
-    super(cluster, traitSet, ImmutableList.of(), input, groupSet, groupSets, aggCalls);
+    super(cluster, traitSet, hints, input, groupSet, groupSets, aggCalls);
 
     if (getConvention() != input.getConvention()) {
       String message = String.format(Locale.ROOT, "%s != %s", getConvention(),
@@ -87,7 +91,12 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
       }
     }
 
-    if (getGroupType() != Group.SIMPLE) {
+    if (this.getHints().stream().anyMatch(x -> ELASTICSEARCH_ENABLE_SAFE_GROUPING.equals(x.hintName))) {
+      if (groupSet.size() != 0) {
+        final String message = "no grouping supported with hint " + ELASTICSEARCH_ENABLE_SAFE_GROUPING;
+        throw new InvalidRelException(message);
+      }
+    } else if (getGroupType() != Group.SIMPLE) {
       final String message = String.format(Locale.ROOT, "Only %s grouping is supported. "
               + "Yours is %s", Group.SIMPLE, getGroupType());
       throw new InvalidRelException(message);
@@ -102,7 +111,7 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
       ImmutableBitSet groupSet,
       List<ImmutableBitSet> groupSets,
       List<AggregateCall> aggCalls) throws InvalidRelException {
-    this(cluster, traitSet, input, groupSet, groupSets, aggCalls);
+    this(cluster, traitSet, ImmutableList.of(), input, groupSet, groupSets, aggCalls);
     checkIndicator(indicator);
   }
 
@@ -110,7 +119,7 @@ public class ElasticsearchAggregate extends Aggregate implements ElasticsearchRe
       ImmutableBitSet groupSet, List<ImmutableBitSet> groupSets,
       List<AggregateCall> aggCalls) {
     try {
-      return new ElasticsearchAggregate(getCluster(), traitSet, input,
+      return new ElasticsearchAggregate(getCluster(), traitSet, ImmutableList.of(), input,
           groupSet, groupSets, aggCalls);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
