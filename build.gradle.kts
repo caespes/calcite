@@ -52,6 +52,9 @@ plugins {
 repositories {
     // At least for RAT
     mavenCentral()
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/releases/")
+    }
 }
 
 fun reportsForHumans() = !(System.getenv()["CI"]?.toBoolean() ?: false)

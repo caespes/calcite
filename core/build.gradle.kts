@@ -43,6 +43,8 @@ dependencies {
     api("org.apache.calcite.avatica:avatica-core")
     api("org.apiguardian:apiguardian-api")
 
+    implementation("org.mdkt.compiler:InMemoryJavaCompiler:1.3.0")
+
     implementation("com.esri.geometry:esri-geometry-api")
     implementation("com.fasterxml.jackson.core:jackson-core")
     implementation("com.fasterxml.jackson.core:jackson-databind")
