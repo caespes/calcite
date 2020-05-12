@@ -49,9 +49,15 @@ public class HintStrategyTable {
   //~ Static fields/initializers ---------------------------------------------
 
   /** Empty strategies. */
-  // Need to replace the EMPTY with DEFAULT if we have any hint implementations.
   public static final HintStrategyTable EMPTY = new HintStrategyTable(
       Collections.emptyMap(), HintErrorLogger.INSTANCE);
+
+  /**
+   * Default strategies. Starts empty, but rules can register hints with
+   * {@link HintStrategyTable#addHintToDefaultTable}
+   */
+  public static final HintStrategyTable DEFAULT = new HintStrategyTable(
+      new HashMap<>(), HintErrorLogger.INSTANCE);
 
   //~ Instance fields --------------------------------------------------------
 
@@ -67,6 +73,14 @@ public class HintStrategyTable {
   }
 
   //~ Methods ----------------------------------------------------------------
+  public static void addHintToDefaultTable(String hintName, HintPredicate strategy) {
+    HintStrategyTable.DEFAULT.strategies.put(Key.of(hintName),
+        HintStrategy.builder(Objects.requireNonNull(strategy)).build());
+  }
+
+  public static void addHintToDefaultTable(String hintName, HintStrategy entry) {
+    HintStrategyTable.DEFAULT.strategies.put(Key.of(hintName), Objects.requireNonNull(entry));
+  }
 
   /**
    * Applies this {@link HintStrategyTable} hint strategies to the given relational
