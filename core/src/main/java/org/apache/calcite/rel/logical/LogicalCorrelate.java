@@ -116,4 +116,9 @@ public final class LogicalCorrelate extends Correlate {
   @Override public RelNode accept(RelShuttle shuttle) {
     return shuttle.visit(this);
   }
+
+  @Override public RelNode withHints(List<RelHint> hintList) {
+    return new LogicalCorrelate(getCluster(), traitSet, hintList, left, right,
+        correlationId, requiredColumns, joinType);
+  }
 }
