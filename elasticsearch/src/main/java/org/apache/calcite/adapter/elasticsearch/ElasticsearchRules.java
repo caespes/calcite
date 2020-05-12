@@ -28,6 +28,7 @@ import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.convert.ConverterRule;
 import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.hint.HintStrategyTable;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -256,6 +257,10 @@ class ElasticsearchRules {
   private static class ElasticsearchAggregateRule extends ElasticsearchConverterRule {
     static final RelOptRule INSTANCE = new ElasticsearchAggregateRule();
 
+    static {
+      HintStrategyTable.addHintToDefaultTable("ELASTICSEARCH_ENABLE_SAFE_GROUPING", (a, b) -> true);
+    }
+
     private ElasticsearchAggregateRule() {
       super(LogicalAggregate.class, Convention.NONE, ElasticsearchRel.CONVENTION,
           "ElasticsearchAggregateRule");
@@ -268,6 +273,7 @@ class ElasticsearchRules {
         return new ElasticsearchAggregate(
             rel.getCluster(),
             traitSet,
+            agg.getHints(),
             convert(agg.getInput(), traitSet.simplify()),
             agg.getGroupSet(),
             agg.getGroupSets(),
