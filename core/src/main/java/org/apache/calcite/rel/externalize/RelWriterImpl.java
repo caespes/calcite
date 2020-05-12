@@ -20,6 +20,7 @@ import org.apache.calcite.avatica.util.Spacer;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.hint.Hintable;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlExplainLevel;
@@ -90,6 +91,14 @@ public class RelWriterImpl implements RelWriter {
             .append("=[")
             .append(value.right)
             .append("]");
+      }
+      if (rel instanceof Hintable) {
+        if (j++ == 0) {
+          s.append("(");
+        } else {
+          s.append(", ");
+        }
+        s.append(", hints=").append(((Hintable) rel).getHints());
       }
       if (j > 0) {
         s.append(")");
