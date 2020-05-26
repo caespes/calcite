@@ -51,15 +51,15 @@ public class JsonMapSchema extends JsonSchema {
   }
 
   @Override public void visitChildren(ModelHandler modelHandler) {
-    super.visitChildren(modelHandler);
-    for (JsonTable jsonTable : tables) {
-      jsonTable.accept(modelHandler);
-    }
     for (JsonFunction jsonFunction : functions) {
       jsonFunction.accept(modelHandler);
     }
     for (JsonType jsonType : types) {
       jsonType.accept(modelHandler);
     }
+    for (JsonTable jsonTable : tables) {
+      jsonTable.accept(modelHandler);
+    }
+    super.visitChildren(modelHandler);
   }
 }
