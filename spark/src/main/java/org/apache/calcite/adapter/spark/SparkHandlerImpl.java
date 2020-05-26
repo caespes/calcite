@@ -20,6 +20,7 @@ import org.apache.calcite.adapter.enumerable.EnumerableRules;
 import org.apache.calcite.config.CalciteSystemProperty;
 import org.apache.calcite.jdbc.CalcitePrepare;
 import org.apache.calcite.linq4j.tree.ClassDeclaration;
+import org.apache.calcite.model.ModelHandler;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.rel.RelNode;
@@ -121,6 +122,7 @@ public class SparkHandlerImpl implements CalcitePrepare.SparkHandler {
     }
 
     JaninoCompiler compiler = new JaninoCompiler();
+    compiler.getArgs().setClassLoader(ModelHandler.getClassLoader());
     compiler.getArgs().setDestdir(CLASS_DIR.getAbsolutePath());
     compiler.getArgs().setSource(source, classFileName);
     compiler.getArgs().setFullClassName(className);
